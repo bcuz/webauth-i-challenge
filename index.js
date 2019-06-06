@@ -1,4 +1,5 @@
 const express = require('express');
+const bcrypt = require('bcryptjs');
 
 const Users = require('./database/users-model');
 
@@ -15,6 +16,28 @@ server.get('/api/users', async (req, res) => {
     console.log(error);
     res.status(500).json({
       message: 'Error retrieving the users',
+    });
+  }
+});
+
+server.post('/api/register', async (req, res) => {
+  let user = req.body;
+
+  if (!user.username || !user.password) {
+    return res.status(400).json({ message: 'Need username and password' });
+  }
+
+  const hash = bcrypt.hashSync(user.password, 14);
+  user.password = hash
+
+  try {
+    const added = await Users.add(user);
+    res.status(201).json(added);
+  } catch (error) {
+    // log error to server
+    console.log(error);
+    res.status(500).json({
+      message: 'Error adding the user',
     });
   }
 });
