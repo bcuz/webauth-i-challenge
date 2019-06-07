@@ -1,9 +1,23 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
+const session = require('express-session');
 
 const Users = require('./database/users-model');
 
 const server = express();
+const sessionConfig = {
+  name: 'monkey',
+  secret: 'super secret string',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    maxAge: 60 * 60 * 1000,
+    secure: false,
+    httpOnly: true
+  }
+}
+
+server.use(session(sessionConfig))
 
 server.use(express.json());
 
@@ -54,6 +68,8 @@ server.post('/api/login', async (req, res) => {
 
     if (user) {
       if (bcrypt.compareSync(password, user.password)) {
+        req.session.user = user;
+
         res.status(200).json({ message: `Welcome ${user.username}!` });
       } else {
         res.status(401).json({ message: 'Invalid Credentials' });
@@ -73,32 +89,10 @@ server.post('/api/login', async (req, res) => {
 });
 
 async function authorize(req, res, next) {
-  let {username, password} = req.headers
-
-  if (!username || !password) {
-    return res.status(401).json({ message: 'Need username and password' });
-  }
-
-  try {
-    let user = await Users.findBy({ username }).first()    
-
-    if (user) {
-      if (bcrypt.compareSync(password, user.password)) {
-        next()
-      } else {
-        res.status(401).json({ message: 'Invalid Credentials' });
-      }
-
-    } else {
-      res.status(404).json({ message: 'user not found' });
-    }
-
-  } catch (error) {
-    // log error to server
-    console.log(error);
-    res.status(500).json({
-      message: 'Error retrieving the user',
-    });
+  if (req.session && req.session.user) {
+    next();
+  } else {
+    res.status(401).json({ message: 'You are not authorized' });
   }
 }
 

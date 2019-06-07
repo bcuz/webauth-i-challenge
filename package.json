@@ -21,6 +21,7 @@
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "express": "^4.17.1",
+    "express-session": "^1.16.1",
     "knex": "^0.17.3",
     "sqlite3": "^4.0.8"
   },
