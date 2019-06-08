@@ -88,6 +88,18 @@ server.post('/api/login', async (req, res) => {
   }
 });
 
+server.get('/api/logout', (req, res) => {
+  if (req.session) {
+    req.session.destroy(err => {
+      if (err) {
+        res.send('error logging out');
+      } else {
+        res.send('logged out');
+      }
+    });
+  }
+});
+
 async function authorize(req, res, next) {
   if (req.session && req.session.user) {
     next();
